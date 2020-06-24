@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<XMLDB PATH="mod/url/db" VERSION="2012072300" COMMENT="XMLDB file for up1_migrate_cohort_idnumber table"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="../../../lib/xmldb/xmldb.xsd"
+>
+  <TABLES>
+    <TABLE NAME="up1_migrate_cohort_idnumber" COMMENT="match old and new names for cohorts">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true" />
+        <FIELD NAME="old" TYPE="text" NOTNULL="true" SEQUENCE="false" />
+        <FIELD NAME="new" TYPE="text" NOTNULL="true" SEQUENCE="false" />
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id" />
+        <KEY NAME="oldu" TYPE="unique" FIELDS="old" />
+      </KEYS>
+    </TABLE>
+
+    <TABLE NAME="up1_cohortsync_log" COMMENT="record logs for synchronizations handled by auth_ldapup1 and local_cohortsyncup1">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true" />
+        <FIELD NAME="timebegin" TYPE="int" NOTNULL="true" SEQUENCE="false" />
+        <FIELD NAME="timeend" TYPE="int" NOTNULL="true" SEQUENCE="false" />
+		<FIELD NAME="action" TYPE="text" NOTNULL="true" SEQUENCE="false" />
+		<FIELD NAME="info" TYPE="text" NOTNULL="true" SEQUENCE="false" />
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id" />
+      </KEYS>
+    </TABLE>
+  </TABLES>
+</XMLDB>
