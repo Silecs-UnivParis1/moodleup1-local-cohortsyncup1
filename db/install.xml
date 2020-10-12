@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<XMLDB PATH="mod/url/db" VERSION="2012072300" COMMENT="XMLDB file for up1_migrate_cohort_idnumber table"
+<XMLDB PATH="local/cohortsyncup1/db" VERSION="2012072300" COMMENT="XMLDB file for up1_migrate_cohort_idnumber table"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:noNamespaceSchemaLocation="../../../lib/xmldb/xmldb.xsd"
 >
