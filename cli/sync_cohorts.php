@@ -4,6 +4,7 @@
  * @copyright  2012-2020 Silecs {@link http://www.silecs.info/societe}
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
+use \local_cohortsyncup1\diagnostic;
 
 define('CLI_SCRIPT', true);
 
@@ -13,7 +14,8 @@ require_once($CFG->dirroot.'/local/cohortsyncup1/locallib.php');
 
 // now get cli options
 list($options, $unrecognized) = cli_get_params([
-        'help'=>false, 'verb'=>1, 'printlast'=>false, 'testws'=>false, 'check'=>false, 'stats'=>false,
+        'help'=>false, 'verb'=>1,
+        'print-last'=>false, 'testws'=>false, 'checking'=>false, 'statistics'=>false,
         'cleanall'=>false, 'force'=>false, 'delete-old'=>false, 'allGroups'=>false,
         'since'=>false, 'init'=>false]);
 
@@ -31,10 +33,10 @@ Options:
 --init                Apply to all users ever synchronized (like --since=0)
 --help                Print out this help
 
---printlast           Display last syncs (diagnostic)
+--print-last          Display last syncs (diagnostic)
+--checking            Performs various checkings on database consistency and display results
+--statistics          Display various statistics
 --verb=N              Verbosity (0 to 3), 1 by default
---check               Performs various checkings on database consistency and display results
---stats               Display various statistics
 
 --delete-old   /!\    Delete cohorts still in database but not in webservice results anymore. One shot.
 --cleanall            Empty cohort_members, then cohort
@@ -55,19 +57,27 @@ if ( ! empty($options['help']) ) {
     return 0;
 }
 
-
-// Ensure errors are well explained
-$CFG->debug = DEBUG_NORMAL;
-
-if ( $options['check'] ) {
-    check_database($options['verb']);
+if ( $options['checking'] ) {
+    $diagcohorts = new diagnostic(1);
+    $diagcohorts->check_database($options['verb']);
     return 0;
 }
 
-if ( $options['stats'] ) {
-    cohort_statistics($options['verb']);
+if ( $options['statistics'] ) {
+    $diagcohorts = new diagnostic(1);
+    $diagcohorts->cohort_statistics($options['verb']);
     return 0;
 }
+
+if ( $options['print-last'] ) {
+    $diagcohorts = new diagnostic(1);
+    echo "last sync from users = \n";
+    print_r($diagcohorts->get_cohort_last_sync('syncFromUsers'));
+    echo "last sync AllGroups = \n";
+    print_r($diagcohorts->get_cohort_last_sync('syncAllGroups'));
+    return 0;
+}
+
 
 if ( $options['cleanall'] ) {
     cohorts_cleanall($options['force']);
@@ -79,24 +89,17 @@ if ( $options['delete-old'] ) {
     return $res;
 }
 
-if ( $options['printlast'] ) {
-    echo "last sync from users = \n";
-    print_r(get_cohort_last_sync('syncFromUsers'));
-    echo "last sync AllGroups = \n";
-    print_r(get_cohort_last_sync('syncAllGroups'));
-    return 0;
-}
-
 
 if ( $options['init'] ) {
     $since = 0;
 } elseif ( $options['since'] || $options['since'] === '0' ) {
     $since = $options['since'];
 } else {
+    $diagcohorts = new diagnostic(1);
     if ($options['allGroups']) {
-        $last = get_cohort_last_sync('syncAllGroups');
+        $last = $diagcohorts->get_cohort_last_sync('syncAllGroups');
     } else {
-        $last = get_cohort_last_sync('syncFromUsers');
+        $last = $diagcohorts->get_cohort_last_sync('syncFromUsers');
     }
     $since = $last['begin'];
 }

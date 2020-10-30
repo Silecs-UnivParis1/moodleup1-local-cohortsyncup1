@@ -9,27 +9,6 @@
  * In this file, the functions related to cohorts sync used outside of local/cohortsyncup1
  */
 
-/**
- * returns the last sync from the logs
- * @param $synctype = 'syncFromUsers'|'syncAllGroups'
- * @return array('begin' => integer, 'end' => integer) as moodle timestamps
- * @uses exit
- */
-function get_cohort_last_sync($synctype) {
-    global $DB;
-
-    $allowedSyncs = array('syncFromUsers', 'syncAllGroups');
-    if ( ! in_array($synctype, $allowedSyncs)) {
-        throw new coding_exception('unknown sync type: ['. $synctype . '].');
-    }
-    $sql = "SELECT MAX(timebegin) AS begin, MAX(timeend) AS end FROM {up1_cohortsync_log} WHERE action=? ";
-    $record = $DB->get_record_sql($sql, ['cohort:' . $synctype]);
-        $res = array(
-            'begin' => $record->begin,
-            'end' => $record->end,
-        );
-        return $res;
-}
 
 
 /**
@@ -38,7 +17,7 @@ function get_cohort_last_sync($synctype) {
  * @param bool $verbose
  * @return assoc. array (array)
  */
-function get_equivalent_cohorts($old_idnumbers, $verbose=true) {
+/* public */ function get_equivalent_cohorts($old_idnumbers, $verbose=true) {
     global $DB;
 
     $res = array('new' => array(), 'notfound' => array(), 'unchanged' => array());
@@ -84,7 +63,7 @@ function get_equivalent_cohorts($old_idnumbers, $verbose=true) {
  * text to explain in user interface the reuse of "old" cohorts (to be used in wizard)
  * @param array $equivs as computed by the previous function
  */
-function explain_equivalent_cohorts($equivs) {
+/* public */ function explain_equivalent_cohorts($equivs) {
     if (count($equivs['new'])) {
         echo "Les cohortes annualisées suivantes ont été reconnues et leurs équivalentes actuelles préselectionnées :\n<ul>\n";
         foreach ($equivs['new'] as $idnumber) {
@@ -117,7 +96,7 @@ function explain_equivalent_cohorts($equivs) {
  * @param int $time ; if null, locally generated
  * @return int (record id for a begin timestamp) OR true (ending timestamp)
  */
-function up1_cohortsync_addlog($beginid = null, $action, $info, $time = null) {
+/* public */ function up1_cohortsync_addlog($beginid = null, $action, $info, $time = null) {
     global $DB;
 
     $legitActions = ['cohort:sync', 'cohort:syncAllGroups', 'cohort:syncFromUsers', 'ldap:sync'];

@@ -41,7 +41,7 @@ function cohorts_cleanall($force) {
  * @param integer $cohortid
  * @return boolean true is cohort is enrolled
  */
-function cohort_is_enrolled($cohortid) {
+/* private */ function cohort_is_enrolled($cohortid) {
     global $DB;
     return $DB->record_exists('enrol', array('enrol' => 'cohort', 'status' => 0, 'customint1' => $cohortid));
 }
@@ -52,7 +52,7 @@ function cohort_is_enrolled($cohortid) {
  * @param integer $cohortid
  * @return boolean true = deleted ; false = not deleted
  */
-function safe_delete_cohort($cohortid) {
+/* private */ function safe_delete_cohort($cohortid) {
     global $DB;
     if (cohort_is_enrolled($cohortid)) {
         return false;
@@ -67,7 +67,7 @@ function safe_delete_cohort($cohortid) {
  * wrapper around delete_lacking_cohorts() to execute it by CLI one-shot
  * @return boolean
  */
-function cli_delete_missing_cohorts($verbose) {
+/* public */ function cli_delete_missing_cohorts($verbose) {
     echo "Connect webservice... ";
     list($curlinfo, $wsdata) = get_ws_data(get_config('local_cohortsyncup1', 'ws_allGroups'));
     echo "OK. \n";
@@ -83,7 +83,7 @@ function cli_delete_missing_cohorts($verbose) {
  * @param array $wsdata = array( stdClass( $key => '...', $name => '...', $modifyTimestamp => 'ldapTime', $description => '...')
  * @return array (int $deleted, int $kept) : # of deleted and kept cohorts
  */
-function delete_missing_cohorts($wsdata, $verbose) {
+/*private */ function delete_missing_cohorts($wsdata, $verbose) {
     global $DB;
     $action = array (true => 'delete', false => 'keep');
     $cnt = array ('delete' => 0, 'keep' => 0);
@@ -107,6 +107,7 @@ function delete_missing_cohorts($wsdata, $verbose) {
     return $cnt;
 }
 
+/*private* à passer en fonction anonyme */
 function project_key($datum) {
     return $datum->key;
 }
@@ -120,7 +121,7 @@ function project_key($datum) {
  * @param type $limit
  * @param type $verbose
  */
-function sync_cohorts_all_groups($timelast=0, $limit=0, $verbose=0)
+/* public */ function sync_cohorts_all_groups($timelast=0, $limit=0, $verbose=0)
 {
     update_period($verbose);
     // $ws_allGroups = 'http://ticetest.univ-paris1.fr/wsgroups/allGroups';
@@ -280,7 +281,7 @@ function sync_cohorts_from_users($timelast=0, $limit=0, $verbose=0)
  * @param integer $userid
  * @param array $memberof array(int $cohort->up1key ... )
  */
-function remove_memberships($userid, $memberof) {
+/* private */ function remove_memberships($userid, $memberof) {
     global $DB;
     $cnt = 0;
 
@@ -303,7 +304,7 @@ function remove_memberships($userid, $memberof) {
  * @param type $wscohort
  * @return (object) $newcohort
  */
-function define_cohort($wscohort) {
+/* private */ function define_cohort($wscohort) {
     $groupYearly = groupYearlyPredicate();
     $curyear = get_config('local_cohortsyncup1', 'cohort_period');
     $groupcategory = groupKeyToCategory($wscohort->key);
@@ -335,7 +336,7 @@ function define_cohort($wscohort) {
  * @param type $wscohort
  * @return (object) $cohort
  */
-function update_cohort($wscohort) {
+/* private */ function update_cohort($wscohort) {
     global $DB;
     $cohort = $DB->get_record('cohort', array('up1key' => $wscohort->key));
     $groupYearly = groupYearlyPredicate();
@@ -359,7 +360,7 @@ function update_cohort($wscohort) {
  * @param bool $end : true = keep the end ; false = keep the beginning
  * @return type
  */
-function truncate_str($str, $bytes=254, $end=true, $complete='…') {
+/* private */ function truncate_str($str, $bytes=254, $end=true, $complete='…') {
     if (strlen($str) <= $bytes) {
         return $str;
     }
@@ -384,7 +385,7 @@ function truncate_str($str, $bytes=254, $end=true, $complete='…') {
  * @param int $verb
  * @return int count of blanked "old" cohorts
  */
-function update_period($verb=1) {
+/*private*/ function update_period($verb=1) {
     global $DB;
 
     $dbyear = $DB->get_field_sql(" SELECT MAX(up1period) FROM {cohort}", null, MUST_EXIST);
@@ -401,65 +402,14 @@ function update_period($verb=1) {
     }
 }
 
-/**
- * performs various checkings on the cohorts consistency and display results (intended for CLI)
- */
-function check_database() {
-    $unique_key = check_up1key_unicity();
-    if ($unique_key === true) {
-        echo "Key cohort.up1key unicity OK.\n\n";
-    } else {
-        echo "/!\ Error: key cohort.up1key not unique for following cohorts: (up1key => count)\n";
-        print_r($unique_key);
-        echo "\n";
-    }
-}
 
-/**
- * check if the field up1key is well unique (or empty)
- * @return mixed : true if unique, or array of up1keys in error with their count
- */
-function check_up1key_unicity() {
-    global $DB;
-    $sql = "SELECT up1key, COUNT(id) AS cnt FROM {cohort} WHERE up1key != '' GROUP BY up1key HAVING cnt > 1";
-    $res = $DB->get_records_sql_menu($sql);
-    if (count($res) == 0) {
-        return true;
-    } else {
-        return $res;
-    }
-}
-
-/**
- * show various statistics on cohort records
- */
-function cohort_statistics() {
-    $fields = array('up1period', 'up1category');
-    echo "\nCurrent year = " . get_config('local_cohortsyncup1', 'cohort_period') . "\n\n";
-    foreach ($fields as $field) {
-        echo "Statistics for $field : \n";
-        print_r(cohort_statistics_by($field));
-    }
-}
-
-/**
- * performs mysql statistics based on GROUP BY ($field)
- * @param string $field a column from table cohort
- * @return array (field-value => count)
- */
-function cohort_statistics_by($field) {
-    global $DB;
-    $sql = "SELECT " . $field .", COUNT(id) AS cnt FROM {cohort} GROUP BY " . $field;
-    $res = $DB->get_records_sql_menu($sql);
-    return $res;
-}
 
 /**
  * find the raw idnumber for a yearly cohort (unchanged if not yearly)
  * @param type $idnumber
  * @return string
  */
-function cohort_raw_idnumber($idnumber) {
+/*private*/ /*synchronize*/ function cohort_raw_idnumber($idnumber) {
     if ( preg_match('/^(.+)-(201[0-9])$/', $idnumber, $matches) ) {
         return $matches[1];
     } else {
