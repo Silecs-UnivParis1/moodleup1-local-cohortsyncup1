@@ -403,16 +403,3 @@ function sync_cohorts_from_users($timelast=0, $limit=0, $verbose=0)
 }
 
 
-
-/**
- * find the raw idnumber for a yearly cohort (unchanged if not yearly)
- * @param type $idnumber
- * @return string
- */
-/*private*/ /*synchronize*/ function cohort_raw_idnumber($idnumber) {
-    if ( preg_match('/^(.+)-(201[0-9])$/', $idnumber, $matches) ) {
-        return $matches[1];
-    } else {
-        return $idnumber;
-    }
-}
