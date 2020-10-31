@@ -7,9 +7,6 @@
 
 defined('MOODLE_INTERNAL') || die;
 
-require_once(__DIR__ . '/../locallib.php');
-require_once(__DIR__ . '/../upgradelib.php');
-
 function xmldb_local_cohortsyncup1_upgrade($oldversion) {
     global $CFG, $DB;
 

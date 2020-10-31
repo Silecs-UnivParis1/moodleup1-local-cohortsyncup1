@@ -5,8 +5,6 @@ use \local_cohortsyncup1\equivalence;
 define('CLI_SCRIPT', true);
 require(dirname(dirname(dirname(dirname(__FILE__)))).'/config.php'); // global moodle config file.
 require_once($CFG->libdir.'/clilib.php');      // cli only functions
-// require_once($CFG->dirroot.'/local/cohortsyncup1/locallib.php');
-// require_once($CFG->dirroot.'/local/cohortsyncup1/lib.php');
 
 // now get cli options
 list($options, $unrecognized) = cli_get_params(
