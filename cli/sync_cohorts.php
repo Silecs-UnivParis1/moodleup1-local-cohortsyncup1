@@ -17,7 +17,8 @@ require_once($CFG->dirroot.'/local/cohortsyncup1/locallib.php');
 list($options, $unrecognized) = cli_get_params([
         'help'=>false, 'verbose'=>1,
         'print-last'=>false, 'testws'=>false, 'checking'=>false, 'statistics'=>false,
-        'clean-all'=>false, 'force'=>false, 'delete-old'=>false, 'allGroups'=>false,
+        'sync-all-groups'=>false, 'sync-from-users'=>false, 'limit'=>0,
+        'clean-all'=>false, 'force'=>false, 'delete-old'=>false, 
         'since'=>false, 'init'=>false]);
 
 if ($unrecognized) {
@@ -29,15 +30,17 @@ $help =
 "Synchronize cohorts from PAGS webservice. Normally, to be executed by a cron job.
 
 Options:
+--sync-all-groups     Uses 'allGroups' webservice for synchro (new standard process)
+--sync-from-users     Uses processs from users for synchro (obsolete original process)
 --since=(timestamp)   Apply only to users synchronized since given timestamp. If not set, use last cohort sync.
---allGroups           Uses 'allGroups' webservice instead of the standard one (from users)
 --init                Apply to all users ever synchronized (like --since=0)
+--limit=N             Force a numeric limit to sync process
 --help                Print out this help
 
 --print-last          Display last syncs (diagnostic)
 --checking            Performs various checkings on database consistency and display results
 --statistics          Display various statistics
---verbose=N              Verbosity (0 to 3), 1 by default
+--verbose=N           Verbosity (0 to 3), 1 by default
 
 --delete-old   /!\    Delete cohorts still in database but not in webservice results anymore. One shot.
 --clean-all           Empty cohort_members, then cohort
@@ -49,7 +52,7 @@ DELETE FROM cohort, cohort_members  USING cohort INNER JOIN cohort_members
     WHERE cohort.component = 'local_cohortsyncup1' AND cohort.id = cohort_members.cohortid;
 
 Example:
-/usr/bin/php local/cohortsyncup1/cli/sync_cohorts.php --init --verbose=2
+/usr/bin/php local/cohortsyncup1/cli/sync_cohorts.php --sync-from-users --init --verbose=2
 
 ";
 
@@ -87,7 +90,8 @@ if ( $options['clean-all'] ) {
 }
 
 if ( $options['delete-old'] ) {
-    $res = cli_delete_missing_cohorts($options['verbose']);
+    $sync = new synchronize($options['verbose']);
+    $res = $sync->cli_delete_missing_cohorts();
     return $res;
 }
 
@@ -98,16 +102,23 @@ if ( $options['init'] ) {
     $since = $options['since'];
 } else {
     $diagcohorts = new diagnostic(1);
-    if ($options['allGroups']) {
+    if ($options['sync-all-groups']) {
         $last = $diagcohorts->get_cohort_last_sync('syncAllGroups');
-    } else {
+    }
+    if ($options['sync-from-users']) {
         $last = $diagcohorts->get_cohort_last_sync('syncFromUsers');
     }
     $since = $last['begin'];
 }
 
-if ($options['allGroups']) {
-    sync_cohorts_all_groups($since, 0, $options['verbose']);
-} else {
-    sync_cohorts_from_users($since, 0, $options['verbose']);
+if ($options['sync-all-groups']) {
+    $sync = new synchronize($options['verbose']);
+    $sync->sync_all_groups($since, $options['limit']);
+    return 0;
+}
+
+if ($options['sync-from-users']) {
+    $sync = new synchronize($options['verbose']);
+    $sync->sync_from_users($since, $options['limit']);
+    return 0;
 }

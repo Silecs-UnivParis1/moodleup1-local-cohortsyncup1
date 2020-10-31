@@ -36,7 +36,7 @@ class fetch_wsgroups
      * @param string $webservice URL of the webservice
      * @return array($curlinfo, $data)
      */
-    private function get_data($webservice) {
+    public function get_data($webservice) {
         $wstimeout = 5;
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
