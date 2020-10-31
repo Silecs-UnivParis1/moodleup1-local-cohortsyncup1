@@ -33,6 +33,7 @@ class synchronize
      * @param string $info
      * @param int $time ; if null, locally generated
      * @return int (record id for a begin timestamp) OR true (ending timestamp)
+     * @global moodle_database $DB
      */
     public static function add_log(int $beginid = null, string $action, string $info, int $time = null) {
         global $DB;
@@ -64,8 +65,8 @@ class synchronize
 
     /**
      * deletes all cohorts members, then all cohorts.
-     * @global type $DB
      * @param bool $force execution even if it breaks enrolments
+     * @global moodle_database $DB
      */
     public function clean_all($force) {
         global $DB;
@@ -93,6 +94,7 @@ class synchronize
      * @global type $DB
      * @param integer $cohortid
      * @return boolean true = deleted ; false = not deleted
+     * @global moodle_database $DB
      */
     private function safe_delete_cohort($cohortid) {
         global $DB;
@@ -119,6 +121,7 @@ class synchronize
     /**
      * delete base cohorts which are not present in the webservice results anymore
      * @return array (int $deleted, int $kept) : # of deleted and kept cohorts
+     * @global moodle_database $DB
      */
     private function delete_missing_cohorts() {
         global $DB;
@@ -195,6 +198,7 @@ class synchronize
      * @param object $cohort
      * @param string $ldaptimelast
      * @return action among ('create', 'modify', 'pass', 'noop')
+     * @global moodle_database $DB
      */
     function process_cohort($cohort, $ldaptimelast) {
         global $DB;
@@ -226,6 +230,7 @@ class synchronize
      * @param type $timelast since when the sync must be executed
      * @param type $limit
      * @param type $verbose
+     * @global moodle_database $DB
      */
     public function sync_from_users($timelast=0, $limit=0, $verbose=0)
     {
@@ -306,6 +311,7 @@ class synchronize
      * compute memberships to be removed from database, and then actually do removing
      * @param integer $userid
      * @param array $memberof array(int $cohort->up1key ... )
+     * @global moodle_database $DB
      */
     private function remove_memberships($userid, $memberof) {
         global $DB;
@@ -362,6 +368,7 @@ class synchronize
      * only 'name' and 'description' fields can be updated
      * @param type $wscohort
      * @return (object) $cohort OR FALSE if not modified
+     * @global moodle_database $DB
      */
     private function update_cohort($wscohort) {
         global $DB, $CFG;
@@ -415,6 +422,7 @@ class synchronize
      * checks if the current year (cohort_period) has changed since the last sync
      * and empties the cohort.up1key fields of matching cohorts
      * @return int count of blanked "old" cohorts
+     * @global moodle_database $DB
      */
     private function update_period() {
         global $DB;
@@ -431,7 +439,6 @@ class synchronize
         $DB->execute("UPDATE {cohort} SET up1key='' WHERE up1period=? AND up1key != '' ", [$dbyear]);
         return $cntErased;
     }
-
 
     private function vecho($verbmin, $text)
     {
