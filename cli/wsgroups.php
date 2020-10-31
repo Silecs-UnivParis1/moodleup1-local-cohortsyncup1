@@ -1,21 +1,19 @@
 <?php
 /**
  * @package    local_cohortsyncup1
- * @copyright  2014 Silecs {@link http://www.silecs.info/societe}
+ * @copyright  2014-2020 Silecs {@link http://www.silecs.info/societe}
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
+use \local_cohortsyncup1\fetch_wsgroups;
 
 define('CLI_SCRIPT', true);
-
 require(dirname(dirname(dirname(dirname(__FILE__)))).'/config.php'); // global moodle config file.
 require_once($CFG->libdir.'/clilib.php');      // cli only functions
-require_once($CFG->dirroot.'/local/cohortsyncup1/libwsgroups.php');
-
 
 // now get cli options
-list($options, $unrecognized) = cli_get_params(array(
-        'help'=>false, 'verb'=>1, 'testws'=>false, 'displaygroups'=>false, 'related'=>false ),
-    array('h'=>'help', 'i'=>'init'));
+list($options, $unrecognized) = cli_get_params([
+        'help'=>false, 'verbose'=>0, 'test-ws-ugar'=>false,
+        'display-groups'=>false, 'related'=>false, 'related-cohorts'=>false]);
 
 if ($unrecognized) {
     $unrecognized = implode("\n  ", $unrecognized);
@@ -26,15 +24,16 @@ $help =
 "Testing functionalities over libwsgroups.php.
 
 Options:
--h, --help            Print out this help
+-h, --help            print this help
 
---testws              Test the webservice (data download)
---displaygroups       Display all the groups (may be slow), to use with --verb= 1 to 3
---verb=N              Verbosity (0 to 3), 1 by default
---related=X           Display related groups. X= eg. groups-mati0938B05
+--related=X           display subgroups and supergroups.  X= eg. 'structures-U03'
+--related-cohorts=X   display subgroups and supergroups which are real cohorts in DB
+--test-ws-ugar        test the webservice userGroupsAndRoles (data download)
+--display-groups      display all the groups (may be slow), to use with --verb= 1 to 3
+--verbose=N           verbosity (0 to 3), 1 by default
 
 Example:
-/usr/bin/php local/cohortsyncup1/cli/wsgroups.php --testws --verb=2
+/usr/bin/php local/cohortsyncup1/cli/wsgroups.php --test-ws --verb=2
 ";
 
 if ( ! empty($options['help']) ) {
@@ -42,23 +41,28 @@ if ( ! empty($options['help']) ) {
     return 0;
 }
 
-
-// Ensure errors are well explained
-$CFG->debug = DEBUG_NORMAL;
-
-
-if ( $options['testws'] ) {
-    test_user_groups_and_roles($options['verb']);
+if ( $options['test-ws-ugar'] ) {
+    $fetch = new fetch_wsgroups($options['verbose']);
+    $fetch->test_user_groups_and_roles();
     return 0;
 }
 
-if ( $options['displaygroups'] ) {
-    display_all_groups($options['verb']);
+if ( $options['display-groups'] ) {
+    $fetch = new fetch_wsgroups($options['verbose']);
+    $fetch->display_all_groups();
     return 0;
 }
 
-if ( $options['related'] ) {
-    $rgroups = get_related_groups($options['related']);
+if ( $group = $options['related'] ) {
+    $fetch = new fetch_wsgroups($options['verbose']);
+    $rgroups = $fetch->get_related_groups($group);
     print_r($rgroups);
+    return 0;
+}
+
+if ( $cohort = $options['related-cohorts'] ) {
+    $fetch = new fetch_wsgroups($options['verbose']);
+    $rcohorts = $fetch->get_related_cohorts([$cohort]);
+    print_r($rcohorts);
     return 0;
 }
