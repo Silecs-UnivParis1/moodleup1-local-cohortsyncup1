@@ -5,6 +5,7 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 use \local_cohortsyncup1\diagnostic;
+use \local_cohortsyncup1\synchronize;
 
 define('CLI_SCRIPT', true);
 
@@ -14,9 +15,9 @@ require_once($CFG->dirroot.'/local/cohortsyncup1/locallib.php');
 
 // now get cli options
 list($options, $unrecognized) = cli_get_params([
-        'help'=>false, 'verb'=>1,
+        'help'=>false, 'verbose'=>1,
         'print-last'=>false, 'testws'=>false, 'checking'=>false, 'statistics'=>false,
-        'cleanall'=>false, 'force'=>false, 'delete-old'=>false, 'allGroups'=>false,
+        'clean-all'=>false, 'force'=>false, 'delete-old'=>false, 'allGroups'=>false,
         'since'=>false, 'init'=>false]);
 
 if ($unrecognized) {
@@ -36,10 +37,10 @@ Options:
 --print-last          Display last syncs (diagnostic)
 --checking            Performs various checkings on database consistency and display results
 --statistics          Display various statistics
---verb=N              Verbosity (0 to 3), 1 by default
+--verbose=N              Verbosity (0 to 3), 1 by default
 
 --delete-old   /!\    Delete cohorts still in database but not in webservice results anymore. One shot.
---cleanall            Empty cohort_members, then cohort
+--clean-all           Empty cohort_members, then cohort
   --force      /!\    Do cleanall, even if it breaks enrolments. DO NOT USE UNLESS EMERGENCY!
 
 If you want to force initialization, you should execute --cleanall first but it may be faster
@@ -48,7 +49,7 @@ DELETE FROM cohort, cohort_members  USING cohort INNER JOIN cohort_members
     WHERE cohort.component = 'local_cohortsyncup1' AND cohort.id = cohort_members.cohortid;
 
 Example:
-/usr/bin/php local/cohortsyncup1/cli/sync_cohorts.php --init --verb=2
+/usr/bin/php local/cohortsyncup1/cli/sync_cohorts.php --init --verbose=2
 
 ";
 
@@ -59,13 +60,13 @@ if ( ! empty($options['help']) ) {
 
 if ( $options['checking'] ) {
     $diagcohorts = new diagnostic(1);
-    $diagcohorts->check_database($options['verb']);
+    $diagcohorts->check_database($options['verbose']);
     return 0;
 }
 
 if ( $options['statistics'] ) {
     $diagcohorts = new diagnostic(1);
-    $diagcohorts->cohort_statistics($options['verb']);
+    $diagcohorts->cohort_statistics($options['verbose']);
     return 0;
 }
 
@@ -79,13 +80,14 @@ if ( $options['print-last'] ) {
 }
 
 
-if ( $options['cleanall'] ) {
-    cohorts_cleanall($options['force']);
+if ( $options['clean-all'] ) {
+    $sync = new synchronize($options['verbose']);
+    $sync->clean_all($options['force']);
     return 0;
 }
 
 if ( $options['delete-old'] ) {
-    $res = cli_delete_missing_cohorts($options['verb']);
+    $res = cli_delete_missing_cohorts($options['verbose']);
     return $res;
 }
 
@@ -105,7 +107,7 @@ if ( $options['init'] ) {
 }
 
 if ($options['allGroups']) {
-    sync_cohorts_all_groups($since, 0, $options['verb']);
+    sync_cohorts_all_groups($since, 0, $options['verbose']);
 } else {
-    sync_cohorts_from_users($since, 0, $options['verb']);
+    sync_cohorts_from_users($since, 0, $options['verbose']);
 }
