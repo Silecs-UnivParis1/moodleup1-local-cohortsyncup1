@@ -18,7 +18,7 @@ list($options, $unrecognized) = cli_get_params([
         'help'=>false, 'verbose'=>1,
         'print-last'=>false, 'testws'=>false, 'checking'=>false, 'statistics'=>false,
         'sync-all-groups'=>false, 'sync-from-users'=>false, 'limit'=>0,
-        'clean-all'=>false, 'force'=>false, 'delete-old'=>false, 
+        'clean-all'=>false, 'force'=>false, 'delete-old'=>false, 'yearly-rotate'=>false,
         'since'=>false, 'init'=>false]);
 
 if ($unrecognized) {
@@ -42,6 +42,7 @@ Options:
 --statistics          Display various statistics
 --verbose=N           Verbosity (0 to 3), 1 by default
 
+--yearly-rotate       À lancer une fois par an pour la rotation des cohortes annualisées, après la mise à jour du paramètre cohort_period
 --delete-old   /!\    Delete cohorts still in database but not in webservice results anymore. One shot.
 --clean-all           Empty cohort_members, then cohort
   --force      /!\    Do cleanall, even if it breaks enrolments. DO NOT USE UNLESS EMERGENCY!
@@ -93,6 +94,12 @@ if ( $options['delete-old'] ) {
     $sync = new synchronize($options['verbose']);
     $res = $sync->cli_delete_missing_cohorts();
     return $res;
+}
+
+if ( $options['yearly-rotate'] ) {
+    $equivalence = new equivalence(1);
+    $equivalence->yearly_rotate();
+    return 0;
 }
 
 

@@ -29,6 +29,7 @@ class equivalence
      * @param array $old_idnumbers
      * @param int $verbose
      * @return assoc. array (array)
+     * @global moodle_database $DB
      */
     public function get_equivalent_cohorts($old_idnumbers, $verbose=1) {
         global $DB;
@@ -95,6 +96,54 @@ class equivalence
         return true;
     }
 
+    
+    /**
+     * à lancer une fois par an, après le changement de réglage cohort_period du plugin
+     * @global moodle_database $DB
+     */
+    public function yearly_rotate() {
+        global $DB;
+        require_once($CFG->dirroot . '/local/mwsgroups/lib.php');
+
+        $sql = "SELECT id, name, idnumber, component FROM {cohort} "
+             . " WHERE component = 'local_cohortsyncup1' AND up1category='' ";
+        $records = $DB->get_records_sql($sql);
+        $groupYearly = groupYearlyPredicate();
+        $curyear = get_config('local_cohortsyncup1', 'cohort_period');
+        $count = ['old' => 0, 'current-up' => 0, 'current-noop' => 0, 'none' => 0];
+
+        foreach ($records as $cohort) {
+            $this->vecho('.');
+            $groupcategory = groupKeyToCategory($cohort->idnumber);
+
+            if ( preg_match('/-(20[12][0-9])$/', $cohort->idnumber, $matches) ) { // cohorte annualisée
+                $year = $matches[1];
+                if ($year <> $curyear) {
+                    $cohort->up1period = $year;
+                    $cohort->up1key = ''; // on la désactive des mises à jour
+                    $count['old']++;
+                } else {
+                    $cohort->up1period = $curyear;
+                    $cohort->up1key = $this->cohort_raw_idnumber($cohort->idnumber);
+                    $count['current-noop']++;
+                }
+            } elseif ( $groupYearly[$groupcategory] ) {
+                $cohort->up1period = $curyear;
+                $cohort->up1key = $cohort->idnumber;
+                $cohort->idnumber = $cohort->idnumber . '-' .$curyear;
+                $cohort->name = '['. $curyear . '] ' . $cohort->name;
+                $count['current-up']++;
+            } else { // cohorte non annualisée
+                $cohort->up1key = $cohort->idnumber;
+                $count['none']++;
+            }
+            $cohort->up1category = $groupcategory;
+            $DB->update_record('cohort', $cohort, true);
+        }
+
+        echo "Comptages : ";
+        print_r($count);
+    }
 
     /**
      * find the raw idnumber for a yearly cohort (unchanged if not yearly)  eg. 2017-2018 => 2017
