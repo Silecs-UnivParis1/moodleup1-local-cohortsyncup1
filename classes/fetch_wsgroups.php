@@ -17,6 +17,7 @@ class fetch_wsgroups
     private $verbose;
     private $ws_allGroups;
     private $ws_ugar;
+    public $curlinfo = null;
 
     /**
      *
@@ -50,7 +51,8 @@ class fetch_wsgroups
             throw new \coding_exception("webservice does NOT work", $dump);
         }
         curl_close($ch);
-        return [$curlinfo, $data];
+        $this->curlinfo = $curlinfo;
+        return $data;
     }
 
 
@@ -60,15 +62,30 @@ class fetch_wsgroups
      */
     public function test_user_groups_and_roles()
     {
-        list($curlinfo, $data) = $this->get_data($this->ws_ugar);
+        $data = $this->get_data($this->ws_ugar);
         printf("%s : %d entries.\n", $this->ws_ugar, count($data));
-        print_r($curlinfo);
+        print_r($this->curlinfo);
 
         $requrl = $this->ws_ugar . "?uid=prigaux";
-        list($curlinfo, $data) = $this->get_data($requrl);
+        $data = $this->get_data($requrl);
         printf("%s : %d entries.\n", $requrl, count($data));
-        print_r($curlinfo);
+        print_r($this->curlinfo);
     }
+
+    /**
+     * fetch all groups
+     */
+    public function fetch_all_groups()
+    {
+        $data = $this->get_data($this->ws_allGroups);
+        if ($data) {
+            return $data;
+        }
+        $this->vecho(1, "\nUnable to fetch data from: " . $this->ws_allGroups . "\n");
+        $this->vecho(2, "\n\nCurl diagnostic:\n" . print_r($this->curlinfo, true));
+        return false;
+    }
+
 
     /**
      * Debug / display results of webservice
@@ -76,7 +93,7 @@ class fetch_wsgroups
     public function display_all_groups()
     {
         $count = 0;
-        list($curlinfo, $data) = $this->get_data($this->ws_allGroups);
+        $data = $this->fetch_all_groups();
 
         if ($data) {
             $this->vecho(1, "\nParsing " . count($data) . " groups. \n");
@@ -86,10 +103,7 @@ class fetch_wsgroups
                 $this->vecho(3, "$count." . $group->key . "\n");
             } // foreach($data)
             echo "\nAll groups parsed.\n";
-        } else {
-            echo "\nUnable to fetch data from: " . $this->ws_allGroups . "\n" ;
         }
-        $this->vecho(2, "\n\nCurl diagnostic:\n" . print_r($curlinfo, true));
     }
 
 
@@ -102,7 +116,7 @@ class fetch_wsgroups
 
         $urlws = str_replace('allGroups', 'getSubGroups', $this->ws_allGroups);
         $requrl = $urlws . "?key=" . $key;
-        list($curlinfo, $wsdata) = $this->get_data($requrl);
+        $wsdata = $this->get_data($requrl);
         $subgroups = [];
         foreach ($wsdata as $subgroup) {
             $subgroups[] = $subgroup->key;
@@ -110,7 +124,7 @@ class fetch_wsgroups
 
         $urlws = str_replace('allGroups', 'getSuperGroups', $this->ws_allGroups);
         $requrl = $urlws . "?key=" . $key;
-        list($curlinfo, $wsdata) = $this->get_data($requrl);
+        $wsdata = $this->get_data($requrl);
         $supergroups = $wsdata->$key->superGroups;
 
         return ['sub' => $subgroups, 'super' => $supergroups];
@@ -131,11 +145,10 @@ class fetch_wsgroups
             $flatrelated = array_merge($flatrelated, [$key], $relatedgroups['sub'], $relatedgroups['super']);
         }
         $flatrelated = array_unique($flatrelated);
-        //var_dump($flatrelated);
 
-        $insql = "('" . join("','" , $flatrelated) . "')";
+        $inSql = "('" . join("','" , $flatrelated) . "')";
         $sql = "SELECT id, name, idnumber, description, descriptionformat, up1category "
-             . "FROM {cohort} WHERE up1key IN  $insql  ORDER BY name";
+             . "FROM {cohort} WHERE up1key IN  $inSql  ORDER BY name";
         $records = $DB->get_records_sql($sql);
         $groups = [];
         $order = 0;
