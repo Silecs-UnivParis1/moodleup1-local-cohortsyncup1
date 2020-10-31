@@ -77,9 +77,9 @@ if ( $options['statistics'] ) {
 if ( $options['print-last'] ) {
     $diagcohorts = new diagnostic(1);
     echo "last sync from users = \n";
-    print_r($diagcohorts->get_cohort_last_sync('syncFromUsers'));
+    print_r($diagcohorts->get_last_sync('syncFromUsers'));
     echo "last sync AllGroups = \n";
-    print_r($diagcohorts->get_cohort_last_sync('syncAllGroups'));
+    print_r($diagcohorts->get_last_sync('syncAllGroups'));
     return 0;
 }
 
@@ -110,10 +110,10 @@ if ( $options['init'] ) {
 } else {
     $diagcohorts = new diagnostic(1);
     if ($options['sync-all-groups']) {
-        $last = $diagcohorts->get_cohort_last_sync('syncAllGroups');
+        $last = $diagcohorts->get_last_sync('syncAllGroups');
     }
     if ($options['sync-from-users']) {
-        $last = $diagcohorts->get_cohort_last_sync('syncFromUsers');
+        $last = $diagcohorts->get_last_sync('syncFromUsers');
     }
     $since = $last['begin'];
 }

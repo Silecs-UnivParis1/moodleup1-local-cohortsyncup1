@@ -25,7 +25,7 @@ class diagnostic
      * @param $synctype = 'syncFromUsers'|'syncAllGroups'
      * @return array('begin' => integer, 'end' => integer) as moodle timestamps
      */
-    public function get_cohort_last_sync($synctype)
+    public function get_last_sync($synctype)
     {
         global $DB;
 
