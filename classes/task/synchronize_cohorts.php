@@ -1,9 +1,6 @@
 <?php
 namespace local_cohortsyncup1\task;
 
-use \local_cohortsyncup1\synchronize;
-use \local_cohortsyncup1\diagnostic;
-
 class synchronize_cohorts extends \core\task\scheduled_task {
 
     /**
@@ -21,13 +18,13 @@ class synchronize_cohorts extends \core\task\scheduled_task {
      */
     public function execute()
     {
-        $cohortsyncprocess= new synchronize(2);
-        $diagcohorts = new diagnostic(1);
+        $syncprocess= new \local_cohortsyncup1\synchronize(2);
+        $diagcohorts = new \local_cohortsyncup1\diagnostic(1);
 
         $since = $diagcohorts->get_last_sync('syncAllGroups');
-        $sync->sync_all_groups($since, 0);
+        $syncprocess->sync_all_groups($since, 0);
 
         $since = $diagcohorts->get_last_sync('syncFromUsers');
-        $sync->sync_from_users($since, 0);
+        $syncprocess->sync_from_users($since, 0);
     }
 }
