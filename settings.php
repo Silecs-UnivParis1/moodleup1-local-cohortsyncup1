@@ -41,3 +41,10 @@ if (has_capability('moodle/site:config', context_system::instance())) {
     $settings->add($cohortPeriod);
 
 }
+
+$ADMIN->add('reports',
+        new admin_externalpage('local_cohortsyncup1_viewreportusers',
+                'UP1 Utilisateurs et cohortes',
+                "$CFG->wwwroot/local/cohortsyncup1/viewreportusers.php",
+                'local/cohortsyncup1:viewreport')
+        );
