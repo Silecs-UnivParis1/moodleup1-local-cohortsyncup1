@@ -40,15 +40,16 @@ Aucun utilisateur n'est effacé de la base ni passé en état supprimé (`delete
 
 ## Exécution
 
-### Cron
+### Tâche planifiée
 
-La commande est lancée normalement par cron, avec un comportement incrémental : 
-les utilisateurs dont l'attribut ldap *modifyTimestamp* est plus récent que la dernière synchronisation sont pris en compte. 
-La ligne de cron enchaîne préférentiellement les scripts ldapup1 et cohortsyncup1, sur le modèle :
+Depuis la réécriture pour Moodle 3.9, la synchro est une tâche planifiée quotidienne
 
 ```
-`20  *  *   *   *    cd /home/moodle/www/moodle && php auth/ldapup1/cli/sync_users.php && sleep 2 && php local/cohortsyncup1/cli/sync_cohorts.php`
+Synchronisation des utilisateurs LDAP (ldapup1)  \auth_ldapup1\task\sync_task  (auth_ldapup1)
 ```
+
+Elle est normalement lancée **avant** la synchronisation des cohortes (voir page suivante).
+
 
 ### Manuelle
 

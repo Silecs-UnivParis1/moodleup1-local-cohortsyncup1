@@ -78,11 +78,14 @@ La nouvelle synchronisation laisse donc ces enregistrements inchangés, et impor
 
 ## Exécution
 
-L'exécution normale se fait par cron, par exemple une fois par heure. Voici un exemple de ligne crontab qui enchaîne les trois synchronisations :
+Le processus est lancé quotidiennement par une tâche planifiée.
 
 ```
-20  *  *   *   *    cd /home/moodle/www/moodle && php auth/ldapup1/cli/sync_users.php && sleep 2 && php local/cohortsyncup1/cli/sync_cohorts.php && sleep2 && php local/cohortsyncup1/cli/sync_cohorts.php --allGroups
+Synchroniser les cohortes UP1  \local_cohortsyncup1\task\synchronize_cohorts  (local_cohortsyncup1)
 ```
+
+Elle est normalement lancée **après** la synchronisation des utilisateurs par `auth_ldapup1`.
+
 
 ### Options d'exécution
 
