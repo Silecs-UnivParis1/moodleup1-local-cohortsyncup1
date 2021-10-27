@@ -229,10 +229,9 @@ class synchronize
      * @global type $DB
      * @param type $timelast since when the sync must be executed
      * @param type $limit
-     * @param type $verbose
      * @global moodle_database $DB
      */
-    public function sync_from_users($timelast=0, $limit=0, $verbose=0)
+    public function sync_from_users($timelast=0, $limit=0)
     {
         global $DB;
 

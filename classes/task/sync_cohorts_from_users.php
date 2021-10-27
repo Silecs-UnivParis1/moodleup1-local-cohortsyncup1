@@ -1,7 +1,7 @@
 <?php
 namespace local_cohortsyncup1\task;
 
-class synchronize_cohorts extends \core\task\scheduled_task {
+class sync_cohorts_from_users extends \core\task\scheduled_task {
 
     /**
      * Return the task's name as shown in admin screens.
@@ -10,7 +10,7 @@ class synchronize_cohorts extends \core\task\scheduled_task {
      */
     public function get_name()
     {
-        return 'Synchroniser les cohortes UP1';
+        return 'Synchroniser les cohortes UP1 à partir des utilisateurs seulement';
     }
 
     /**
@@ -21,10 +21,7 @@ class synchronize_cohorts extends \core\task\scheduled_task {
         $syncprocess= new \local_cohortsyncup1\synchronize(2);
         $diagcohorts = new \local_cohortsyncup1\diagnostic(1);
 
-        $since = $diagcohorts->get_last_sync('syncAllGroups');
-        $syncprocess->sync_all_groups($since, 0);
-
         $since = $diagcohorts->get_last_sync('syncFromUsers');
-        $syncprocess->sync_from_users($since, 0);
+        $syncprocess->sync_from_users($since['end'], 0);
     }
 }
