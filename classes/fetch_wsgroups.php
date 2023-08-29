@@ -37,7 +37,7 @@ class fetch_wsgroups
      * @return array($curlinfo, $data)
      */
     public function get_data($webservice) {
-        $wstimeout = 5;
+        $wstimeout = 10;
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
         curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, $wstimeout);
