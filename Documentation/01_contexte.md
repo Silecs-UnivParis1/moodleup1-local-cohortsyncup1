@@ -18,7 +18,7 @@ Le travail est réparti entre deux scripts, détaillés dans les pages suivantes
 
 ## Statistiques
 
-Pour le diagnostic, Silecs a développé le plugin `report_up1userstats`, accessible dans *Administration du site > Rapports > UP1 Users statistics*.
+Pour le diagnostic, un rapport est disponible dans *Administration du site > Rapports > UP1 Utilisateurs et cohortes*.
 
 Il affiche les nombres d'utilisateurs, de cohortes et d'appartenances issues des connecteurs (LDAP et PAGS), ainsi que la répartition des cohortes en types et les 10 cohortes les plus peuplées.
 
